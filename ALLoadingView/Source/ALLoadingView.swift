@@ -21,19 +21,19 @@
  //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  //  THE SOFTWARE.
  //
-
-import UIKit
-
-/// The closure called when loading view is presented or removed from screen.
-public typealias ALLVCompletionBlock = () -> Void
  
-/// The closure is called when cancel button is tapped
-public typealias ALLVCancelBlock = () -> Void
-
-private let kALLoadingViewDebugModeKey = false
-
-/// Loading view types definitions
-public enum ALLVType {
+ import UIKit
+ 
+ /// The closure called when loading view is presented or removed from screen.
+ public typealias ALLVCompletionBlock = () -> Void
+ 
+ /// The closure is called when cancel button is tapped
+ public typealias ALLVCancelBlock = () -> Void
+ 
+ private let kALLoadingViewDebugModeKey = false
+ 
+ /// Loading view types definitions
+ public enum ALLVType {
     /// Loading view with UIActivityIndicatorView, .white style, in the center.
     case basic
     
@@ -46,44 +46,47 @@ public enum ALLVType {
     /// Loading view with UIActivityIndicatorView, UITextView and simple UIButton. Button action is specified by `cancelCallback` property.
     case messageWithIndicatorAndCancelButton
     
+    /// Loading view with UIActivityIndicatorView, simple UIButton. Button action is specified by `cancelCallback` property.
+    case indicatorAndCancelButton
+    
     /// Loading view with UITextView and UIProgressView
     case progress
     
     /// Loading view with UITextView, UIProgressView and simple UIButton. Button action is specified by `cancelCallback` property.
     case progressWithCancelButton
-}
-
-/// Loading view size modes
-public enum ALLVWindowMode {
+ }
+ 
+ /// Loading view size modes
+ public enum ALLVWindowMode {
     /// Loading view will take fullscreen. Content is centered.
     case fullscreen
     
     /// Loading view will take only part of the screen. Specified by `windowRatio`.
     case windowed
-}
-
-private enum ALLVProgress {
+ }
+ 
+ private enum ALLVProgress {
     case hidden
     case initializing
     case viewReady
     case loaded
     case hiding
-}
-
-// building blocks
-private enum ALLVViewType {
+ }
+ 
+ // building blocks
+ private enum ALLVViewType {
     case blankSpace
     case messageTextView
     case progressBar
     case cancelButton
     case activityIndicator
-}
-
-/// `ALLoadingView` is a class for displaying pop-up views to notify users that some work is in progress.
-///
-/// For operating loading views and editing attributes use shared entity `manager`. For supporting different 
-/// appearances and layouts use `-resetToDefaults()` method before setting up options for each case.
-public class ALLoadingView: NSObject {
+ }
+ 
+ /// `ALLoadingView` is a class for displaying pop-up views to notify users that some work is in progress.
+ ///
+ /// For operating loading views and editing attributes use shared entity `manager`. For supporting different
+ /// appearances and layouts use `-resetToDefaults()` method before setting up options for each case.
+ public class ALLoadingView: NSObject {
     //MARK: - Public variables
     /// Duration of loading view's appearance/disappearance animation. 0.5 seconds by default.
     public var animationDuration: TimeInterval = 0.5
@@ -184,14 +187,14 @@ public class ALLoadingView: NSObject {
     // MARK: - Public methods
     // MARK: Show loading view
     
-    /// Show loading view with selected type. Loading view will be added as a subview to main UIWindow in hierarchy. 
+    /// Show loading view with selected type. Loading view will be added as a subview to main UIWindow in hierarchy.
     ///
     /// - parameter type: Type of the loading view.
     /// - parameter windowMode: Type of window mode. Optional. `fullscreen` by default.
     /// - parameter completionBlock: The closure called when loading view is presented. Optional.
     public func showLoadingView(ofType type: ALLVType, windowMode: ALLVWindowMode? = nil, completionBlock: ALLVCompletionBlock? = nil) {
         assert(loadingViewProgress == .hidden || loadingViewProgress == .hiding, "ALLoadingView Presentation Error. Trying to push loading view while there is one already presented")
-
+        
         loadingViewProgress = .initializing
         loadingViewWindowMode = windowMode ?? .fullscreen
         loadingViewType = type
@@ -349,6 +352,16 @@ public class ALLoadingView: NSObject {
                 }
             }
             break
+            
+        case .indicatorAndCancelButton:
+            
+            for view in subviews {
+                if view is UIButton {
+                    (view as! UIButton).setTitle("Cancel", for: UIControlState())
+                    (view as! UIButton).addTarget(self, action: #selector(ALLoadingView.cancelButtonTapped(_:)), for: .touchUpInside)
+                }
+            }
+            break
         case .progress:
             updateProgressLoadingView(withMessage: messageText, forProgress: 0.0)
             break
@@ -379,7 +392,7 @@ public class ALLoadingView: NSObject {
         
         // Set up appearance view (blur, color, such stuff)
         initializeAppearanceView()
-    
+        
         // View has been created. Add subviews according to selected type.
         configureStackView()
         createSubviewsForStackView()
@@ -452,7 +465,7 @@ public class ALLoadingView: NSObject {
             view_setSizeConstraints(forView: appearanceView, inContainer: loadingView)
         }
     }
-
+    
     private func view_setWholeScreenConstraints(forView subview: UIView, inContainer container: UIView) {
         subview.translatesAutoresizingMaskIntoConstraints = false
         let topConstraint = NSLayoutConstraint(item: subview, attribute: .top,
@@ -474,14 +487,14 @@ public class ALLoadingView: NSObject {
         let frame = frameForView
         subview.translatesAutoresizingMaskIntoConstraints = false
         let heightConstraint = NSLayoutConstraint(item: subview, attribute: .height,
-                                               relatedBy: .equal, toItem: nil,
-                                               attribute: .notAnAttribute, multiplier: 1, constant: frame.size.height)
+                                                  relatedBy: .equal, toItem: nil,
+                                                  attribute: .notAnAttribute, multiplier: 1, constant: frame.size.height)
         let widthContraint = NSLayoutConstraint(item: subview, attribute: .width,
-                                                 relatedBy: .equal, toItem: nil,
-                                                 attribute: .notAnAttribute, multiplier: 1, constant: frame.size.width)
+                                                relatedBy: .equal, toItem: nil,
+                                                attribute: .notAnAttribute, multiplier: 1, constant: frame.size.width)
         let centerXConstaint = NSLayoutConstraint(item: subview, attribute: .centerX,
-                                                   relatedBy: .equal, toItem: container,
-                                                   attribute: .centerX, multiplier: 1, constant: 0)
+                                                  relatedBy: .equal, toItem: container,
+                                                  attribute: .centerX, multiplier: 1, constant: 0)
         let centerYConstraint = NSLayoutConstraint(item: subview, attribute: .centerY,
                                                    relatedBy: .equal, toItem: container,
                                                    attribute: .centerY, multiplier: 1, constant: 0)
@@ -499,7 +512,7 @@ public class ALLoadingView: NSObject {
             let view = initializeView(withType: viewType, andFrame: CGRect(origin: CGPoint.zero, size: CGSize(width: 50.0, height: 50.0)))
             
             stackView.addArrangedSubview(view)
-
+            
             if view.intrinsicContentSize.width == UIViewNoIntrinsicMetric {
                 view.translatesAutoresizingMaskIntoConstraints = false
                 view.widthAnchor.constraint(equalToConstant: frameForView.width).isActive = true
@@ -529,6 +542,12 @@ public class ALLoadingView: NSObject {
                 return [.messageTextView, .activityIndicator, .cancelButton]
             } else {
                 return [.messageTextView, .activityIndicator, .cancelButton]
+            }
+        case .indicatorAndCancelButton:
+            if self.loadingViewWindowMode == ALLVWindowMode.windowed {
+                return [.activityIndicator, .cancelButton]
+            } else {
+                return [.activityIndicator, .cancelButton]
             }
         case .progress:
             return [.messageTextView, .progressBar]
@@ -631,9 +650,9 @@ public class ALLoadingView: NSObject {
             cancelCallback?()
         }
     }
-}
-
-extension UIView {
+ }
+ 
+ extension UIView {
     func elementHeightAtStackView() -> CGFloat {
         if self.constraints.count > 0 {
             if let heightConstraint = self.constraints.filter({ $0.firstAttribute == .height && $0.constant != 0
@@ -646,4 +665,4 @@ extension UIView {
         }
         return self.frame.height
     }
-}
+ }
